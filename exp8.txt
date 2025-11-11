@@ -1,0 +1,37 @@
+clc; clear all; close all;
+%%% --- Input code parameters ---
+n = input('Enter codeword length n: ');
+k = input('Enter number of data bits k: ');
+m = input('Enter number of data bits m: '); % Note: This should likely be m = n-k
+m = n - k; % number of parity bits
+%%% --- Generator polynomial ---
+G = cyclpoly(n, k, 'max');
+disp('Generator polynomial:'); disp(G)
+gx=poly2sym(G)
+%%% --- Generate all possible data messages ---
+data = de2bi(0:2^k-1, k, 'left-msb'); % All messages
+disp('Data messages:'); disp(data)
+%%% --- Encode messages using cyclic code ---
+codewords = zeros(size(data,1), n);
+for i = 1:size(data,1)
+    cw_poly = mod(conv(data(i,:), G), 2);
+    codewords(i,:) = cw_poly(end-n+1:end);
+end
+disp('Encoded codewords:'); disp(codewords)
+%%% --- Hamming code parity-check matrix ---
+H = hammgen(m);
+syndrome_table = syndtable(H);
+%%% --- Input a received codeword manually ---
+fprintf('\nEnter received codeword (length %d) as a row vector, e.g., [1 0 1 ...]:\n', n);
+recd = input('Received codeword: ');
+%%% --- Compute syndrome ---
+syndrome = mod(recd * H', 2);
+syndrome_dec = bi2de(syndrome,'left-msb');
+%%% --- Find and correct error ---
+error_pattern = syndrome_table(1 + syndrome_dec, :);
+corrected = mod(recd + error_pattern, 2);
+%%% --- Display results ---
+fprintf('\nReceived codeword:  '); disp(recd);
+fprintf('Syndrome:           '); disp(syndrome);
+fprintf('Error pattern:      '); disp(error_pattern);
+fprintf('Corrected codeword: '); disp(corrected);
