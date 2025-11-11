@@ -1,0 +1,29 @@
+clc;
+clear all;
+close all;
+code_length=0;
+x=input('Enter number of symbols: ');
+symbols = 1:x;
+p = zeros(1,x);
+for i=1:x
+    p(i) = input(['Enter probability of symbol ',num2str(i),': ']);
+end
+p= sort(p,'descend')
+
+Hx = 0;
+Total_code_len = 0;     % initialize accumulator
+
+for m = 1:x
+    dict = huffmandict(symbols, p);
+    hcode = huffmanenco(symbols(m), dict);   % encode actual symbol
+    dsig = huffmandeco(hcode, dict);
+
+    Hx = Hx + p(m) * (-log2(p(m)));          % entropy
+    code_length = length(hcode);             % length of codeword
+    Total_code_len = Total_code_len + p(m)*code_length;  % accumulate
+end
+
+avglen = Total_code_len;   % final average length
+fprintf('Entropy H(X) = %.4f bits\n', Hx);
+fprintf('Average Code Length = %.4f bits\n', avglen);
+fprintf('Efficiency = %.2f %%\n', (Hx/avglen)*100);
